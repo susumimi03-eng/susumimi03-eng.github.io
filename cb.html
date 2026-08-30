@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>연결 완료</title>
+<style>
+body{font-family:system-ui,-apple-system,sans-serif;max-width:680px;margin:36px auto;padding:0 20px;line-height:1.7;color:#111}
+h1{font-size:28px;margin:.2em 0}
+#box{background:#f2f2f2;padding:14px;border-radius:10px;word-break:break-all;font-family:ui-monospace,monospace;font-size:15px}
+button{display:block;width:100%;min-height:78px;margin:18px 0;font-size:22px;font-weight:700;border:0;border-radius:14px;background:#12b886;color:#fff;cursor:pointer}
+button:active{background:#0ca678}
+#state{font-size:20px;font-weight:700;padding:14px;border-radius:10px;background:#e7f5ff}
+.ok{background:#d3f9d8 !important}
+</style></head><body>
+<h1>연결 완료</h1>
+<div id="state">사원에게 코드를 보내는 중…</div>
+<button id="copy">📋 코드 복사하기</button>
+<p>복사한 뒤 대화창에 붙여 넣으시면 됩니다. 자동으로 전달되면 아래 상자는 안 보셔도 됩니다.</p>
+<div id="box">(코드 없음)</div>
+<script>
+var p = new URLSearchParams(location.search);
+var code = p.get('code') || '';
+var err = p.get('error') || p.get('error_description') || '';
+var box = document.getElementById('box');
+var state = document.getElementById('state');
+box.textContent = code || err || '(코드 없음)';
+
+// ① 같은 PC 에서 도는 사원 프로그램으로 곧장 보낸다 (차장님 손 0번)
+if (code) {
+  fetch('http://127.0.0.1:8907/code?code=' + encodeURIComponent(code) +
+        '&state=' + encodeURIComponent(p.get('state') || ''), {mode: 'no-cors'})
+    .then(function () {
+      state.textContent = '✅ 사원에게 전달했습니다. 이 창은 닫으셔도 됩니다.';
+      state.className = 'ok';
+    })
+    .catch(function () {
+      state.textContent = '자동 전달이 안 됐습니다 — 아래 초록 버튼을 눌러 주세요.';
+    });
+} else {
+  state.textContent = err ? ('연결이 취소되었습니다: ' + err) : '코드가 없습니다.';
+}
+
+// ② 자동이 막히면 버튼 한 번으로 복사
+document.getElementById('copy').onclick = function () {
+  navigator.clipboard.writeText(code || '').then(function () {
+    state.textContent = '✅ 복사했습니다. 대화창에 붙여 넣어 주세요.';
+    state.className = 'ok';
+  });
+};
+</script>
+</body></html>
